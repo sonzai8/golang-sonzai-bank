@@ -1,5 +1,5 @@
-include .env
-include ./.github/workflows/.env
+-include .env
+-include ./.github/workflows/.env
 export
 MIGRATE_DIR = ./db/migrations
 
