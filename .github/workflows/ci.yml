@@ -13,6 +13,13 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      DB_USER: root
+      DB_PASSWORD: sonzai@123456
+      DB_HOST: localhost
+      DB_PORT: 5433
+      DB_NAME: sonzai-bank
+      DB_SSLMODE: disable
 
     services:
       postgres:
