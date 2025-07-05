@@ -58,5 +58,5 @@ jobs:
         run: make migrate-up
 
 
-      - name: Test
+      - name: Make Test
         run: make test
