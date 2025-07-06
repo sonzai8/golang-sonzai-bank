@@ -2,18 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sonzai8/golang-sonzai-bank/api"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
+	"github.com/sonzai8/golang-sonzai-bank/utils"
 	"log"
 	"time"
-)
-
-const (
-	serverAddress = "0.0.0.0:8080"
-	dbDriver      = "postgres"
-	connStr       = "postgresql://root:sonzai@123456@localhost:5433/sonzai-bank?sslmode=disable"
 )
 
 // SimpleSQLTracer is a basic implementation of the pgx.Tracer interface.
@@ -38,7 +34,14 @@ var testQueries *db.Queries
 var pgPool *pgxpool.Pool
 
 func main() {
-	conf, err := pgxpool.ParseConfig(connStr)
+	config, err := utils.LoadConfig(".")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pg := config.DbDriver
+	dns := "postgresql://%s:%s@%s:%s/%s?sslmode=%s"
+	var s = fmt.Sprintf(dns, pg.User, pg.Pass, pg.Host, pg.Port, pg.Name, pg.SSLMode)
+	conf, err := pgxpool.ParseConfig(s)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
@@ -51,6 +54,9 @@ func main() {
 
 	store := db.NewStore(pgPool)
 	server := api.NewServer(store)
-	server.Start(serverAddress)
+	err = server.Start(config.AppConfig.Port)
+	if err != nil {
+		log.Fatal("cannot start server:", err)
+	}
 
 }
