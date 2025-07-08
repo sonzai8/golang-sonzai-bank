@@ -1,14 +1,17 @@
 package api
 
 import (
+	"database/sql"
+	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgconn"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
 	"net/http"
 )
 
 type createAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR GBP"`
+	Currency string `json:"currency" binding:"required,currency"`
 }
 
 func (server *Server) CreateAccount(ctx *gin.Context) {
@@ -24,8 +27,18 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 	}
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			//fmt.Println("check error code: ", pgErr.Code)
+			switch pgErr.Code {
+			case "23503", "23505":
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+			}
+			ctx.JSON(http.StatusForbidden, errorResponse(err))
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
+
 	}
 	ctx.JSON(http.StatusOK, gin.H{"account": account})
 }
@@ -84,10 +97,15 @@ func (server *Server) GetAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+
 	account, err := server.store.GetAccount(ctx, params.Id)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	//account = db.Account{}
 	ctx.JSON(http.StatusOK, account)
 }

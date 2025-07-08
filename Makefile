@@ -37,4 +37,8 @@ sqlc:
 
 test:
 	go test -v -cover ./...
-.PHONY: migrate-create migrate-up migrate-down migrate-down-n migrate-goto migrate-force migrate-drop sqlc test migrateup
+
+mock:
+	mockgen -package mockdb  -destination db/mock/store.go github.com/sonzai8/golang-sonzai-bank/db/sqlc Store
+
+.PHONY: migrate-create migrate-up migrate-down migrate-down-n migrate-goto migrate-force migrate-drop sqlc test migrateup mock

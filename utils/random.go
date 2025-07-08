@@ -1,11 +1,27 @@
 package utils
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 )
 
 var letters = []rune("abcdefghiiklmnopqrrstuvvwxzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+// Âm đầu (không dấu)
+var initialConsonants = []string{
+	"b", "c", "d", "g", "h", "k", "l", "m", "n", "ph", "qu", "s", "t", "th", "tr", "v",
+}
+
+// Nguyên âm (không dấu)
+var vowels = []string{
+	"an", "ang", "inh", "ong", "i", "ai", "u", "o", "y", "ien", "uan", "anh",
+}
+
+// Âm cuối (không dấu)
+var finalConsonants = []string{
+	"", "n", "ng", "nh", "m", "t", "ch",
+}
 
 func init() {
 	rand.NewSource(time.Now().UnixNano())
@@ -42,4 +58,23 @@ func RandomCurrency() string {
 	currencies := []string{"USD", "USD", "CAD"}
 	n := len(currencies)
 	return currencies[rand.Intn(n)]
+}
+func RandomEmail() string {
+	return fmt.Sprintf("%s@email.com", RandomString(6))
+}
+
+func GenerateVietnameseStyleUsername() string {
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+
+	initial := initialConsonants[r1.Intn(len(initialConsonants))]
+	vowel := vowels[r1.Intn(len(vowels))]
+	final := finalConsonants[r1.Intn(len(finalConsonants))]
+
+	base := initial + vowel + final
+
+	// Thêm số 3 hoặc 4 chữ số phía sau
+	suffix := r1.Intn(9000) + 100
+
+	return fmt.Sprintf("%s%d", base, suffix)
 }

@@ -2,15 +2,18 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
+	"log"
 )
 
 type Server struct {
-	store  *db.Store
+	store  db.Store
 	router *gin.Engine
 }
 
-func NewServer(store *db.Store) *Server {
+func NewServer(store db.Store) *Server {
 	router := gin.Default()
 
 	server := &Server{
@@ -23,6 +26,14 @@ func NewServer(store *db.Store) *Server {
 	router.POST("/accounts:id", server.UpdateAccount)
 	router.DELETE("/accounts/:id", server.DeleteAccount)
 
+	router.POST("/transfer", server.Transfer)
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		err := v.RegisterValidation("currency", validCurrency)
+		if err != nil {
+			log.Fatalf("register validation error: %v", err)
+		}
+	}
 	return server
 }
 
