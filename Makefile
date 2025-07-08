@@ -1,9 +1,8 @@
--include .env
 -include ./.github/workflows/.env
 export
 MIGRATE_DIR = ./db/migrations
 
-CONN_STRING = postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
+CONN_STRING = postgres://$(DB_DRIVER.DB_USER):$(DB_DRIVER.DB_PASSWORD)@$(DB_DRIVER.DB_HOST):$(DB_PORT)/$(DB_DRIVER.DB_NAME)?sslmode=$(DB_DRIVER.DB_SSLMODE)
 
 migrate-create:
 	migrate create -ext sql -dir $(MIGRATE_DIR) -seq $(name)
