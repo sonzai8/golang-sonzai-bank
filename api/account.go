@@ -33,8 +33,10 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 			switch pgErr.Code {
 			case "23503", "23505":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
 			}
 			ctx.JSON(http.StatusForbidden, errorResponse(err))
+			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
