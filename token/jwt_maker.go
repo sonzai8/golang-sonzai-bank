@@ -30,7 +30,9 @@ func (maker JWTMaker) CreateToken(username string, duration time.Duration) (stri
 func (maker JWTMaker) VerifyToken(token string) (*Payload, error) {
 
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
-		_, ok := token.Method.(*jwt.SigningMethodHMAC)
+		fmt.Println("token.Method: ", token.Method)
+		dume, ok := token.Method.(*jwt.SigningMethodHMAC)
+		fmt.Println("dume.SigningMethodHMAC:", dume)
 		if !ok {
 			fmt.Printf("err in function: : %+v\n", ok)
 			return nil, jwt.ErrInvalidKey
