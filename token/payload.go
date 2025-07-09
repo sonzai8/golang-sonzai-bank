@@ -17,20 +17,26 @@ var (
 type Payload struct {
 	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`
-	IssueAt   time.Time `json:"issue_at"`
+	IssuedAt  time.Time `json:"issued_at"`
 	ExpiredAt time.Time `json:"expired_at"`
 }
 
 func (payload Payload) GetExpirationTime() (*jwt.NumericDate, error) {
-	return &jwt.NumericDate{Time: payload.ExpiredAt}, nil
+	return &jwt.NumericDate{
+		Time: payload.ExpiredAt,
+	}, nil
 }
 
 func (payload Payload) GetIssuedAt() (*jwt.NumericDate, error) {
-	return &jwt.NumericDate{Time: time.Now()}, nil
+	return &jwt.NumericDate{
+		Time: payload.IssuedAt,
+	}, nil
 }
 
 func (payload Payload) GetNotBefore() (*jwt.NumericDate, error) {
-	return &jwt.NumericDate{Time: time.Now()}, nil
+	return &jwt.NumericDate{
+		Time: payload.IssuedAt,
+	}, nil
 }
 
 func (payload Payload) GetIssuer() (string, error) {
@@ -42,8 +48,7 @@ func (payload Payload) GetSubject() (string, error) {
 }
 
 func (payload Payload) GetAudience() (jwt.ClaimStrings, error) {
-	//TODO implement me
-	panic("implement me")
+	return jwt.ClaimStrings{}, nil
 }
 
 // Valid checks if the token Payload is valid or not
@@ -63,7 +68,7 @@ func NewPayload(username string, duration time.Duration) (*Payload, error) {
 	return &Payload{
 		ID:        tokenID,
 		Username:  username,
-		IssueAt:   time.Now(),
+		IssuedAt:  time.Now(),
 		ExpiredAt: time.Now().Add(duration),
 	}, nil
 }

@@ -42,7 +42,7 @@ func (maker JWTMaker) VerifyToken(token string) (*Payload, error) {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, ErrExpiredToken
 		}
-		fmt.Printf("Error parsing token: %v\n", err)
+		fmt.Printf("Error parsing token: %+v\n", err)
 		return nil, errInvalidToken
 	}
 
