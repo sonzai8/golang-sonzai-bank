@@ -31,6 +31,7 @@ func (maker JWTMaker) VerifyToken(token string) (*Payload, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
+			fmt.Printf("Unexpected signing method: %v", token.Header["alg"])
 			return nil, errInvalidToken
 		}
 		return []byte(maker.secretKey), nil
@@ -41,7 +42,7 @@ func (maker JWTMaker) VerifyToken(token string) (*Payload, error) {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, ErrExpiredToken
 		}
-
+		fmt.Printf("Error parsing token: %v\n", err)
 		return nil, errInvalidToken
 	}
 

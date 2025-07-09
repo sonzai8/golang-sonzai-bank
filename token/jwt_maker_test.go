@@ -20,9 +20,10 @@ func TestJWTMaker(t *testing.T) {
 	token, err := maker.CreateToken(username, duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
-	payload, err := maker.VerifyToken(token)
 
+	payload, err := maker.VerifyToken(token)
 	require.NoError(t, err)
+
 	require.NotEmpty(t, payload)
 	require.WithinDuration(t, issueAt, payload.IssueAt, time.Second)
 	require.WithinDuration(t, expriedAt, payload.ExpiredAt, time.Second)
