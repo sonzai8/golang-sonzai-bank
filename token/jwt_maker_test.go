@@ -1,6 +1,7 @@
 package token
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
@@ -16,14 +17,16 @@ func TestJWTMaker(t *testing.T) {
 	username := utils.RandomOwner()
 	duration := time.Minute * 10
 	expriedAt := time.Now().Add(duration)
-	issueAt := time.Now()
+	issueAt := time.Now().Add(-3 * time.Minute)
 
 	token, err := maker.CreateToken(username, duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 	payload, err := maker.VerifyToken(token)
 	fmt.Printf("tai sao loi: %v\n", err)
-	fmt.Printf("token: %s\n", token)
+
+	encoded := base64.StdEncoding.EncodeToString([]byte(token))
+	fmt.Printf("token base64: %s\n", encoded)
 	fmt.Printf("token: %v\n", token)
 	fmt.Printf("payload: %s\n", payload)
 	fmt.Printf("username: %s\n", username)
