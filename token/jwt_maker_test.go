@@ -25,7 +25,7 @@ func TestJWTMaker(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotEmpty(t, payload)
-	require.WithinDuration(t, issueAt, payload.IssueAt, time.Second)
+	require.WithinDuration(t, issueAt, payload.IssuedAt, time.Second)
 	require.WithinDuration(t, expriedAt, payload.ExpiredAt, time.Second)
 	require.Equal(t, username, payload.Username)
 }
