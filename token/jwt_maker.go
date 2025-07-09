@@ -35,7 +35,7 @@ func (maker JWTMaker) VerifyToken(token string) (*Payload, error) {
 		fmt.Println("dume.SigningMethodHMAC:", dume)
 		if !ok {
 			fmt.Printf("err in function: : %+v\n", ok)
-			return nil, jwt.ErrInvalidKey
+			return nil, errInvalidToken
 		}
 		return []byte(maker.secretKey), nil
 	}
@@ -46,6 +46,7 @@ func (maker JWTMaker) VerifyToken(token string) (*Payload, error) {
 
 	if err != nil {
 		fmt.Println("payload line 46 :", err)
+		fmt.Printf("payload line 49 :%+v \n", err)
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, ErrExpiredToken
 		}
