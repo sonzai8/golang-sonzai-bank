@@ -17,8 +17,8 @@ var (
 type Payload struct {
 	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`
-	IssueAt   time.Time `json:"issueAt"`
-	ExpiredAt time.Time `json:"expiredAt"`
+	IssueAt   time.Time `json:"issue_at"`
+	ExpiredAt time.Time `json:"expired_at"`
 }
 
 func (payload Payload) GetExpirationTime() (*jwt.NumericDate, error) {
@@ -56,8 +56,12 @@ func (payload *Payload) Valid() error {
 }
 
 func NewPayload(username string, duration time.Duration) (*Payload, error) {
+	tokenID, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
 	return &Payload{
-		ID:        uuid.UUID{},
+		ID:        tokenID,
 		Username:  username,
 		IssueAt:   time.Now(),
 		ExpiredAt: time.Now().Add(duration),
