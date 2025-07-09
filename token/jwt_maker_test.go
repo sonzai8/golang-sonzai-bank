@@ -16,7 +16,7 @@ func TestJWTMaker(t *testing.T) {
 	//duration := time.Minute * 10
 	//expriedAt := time.Now().Add(duration)
 	//issueAt := time.Now()
-	//
+
 	//token, err := maker.CreateToken(username, duration)
 	//require.NoError(t, err)
 	//require.NotEmpty(t, token)
