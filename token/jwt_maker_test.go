@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,7 @@ func TestJWTMaker(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 	payload, err := maker.VerifyToken(token)
+	fmt.Printf("err:%v\n", err)
 	require.NoError(t, err)
 	require.NotEmpty(t, payload)
 	require.WithinDuration(t, issueAt, payload.IssueAt, time.Second)
