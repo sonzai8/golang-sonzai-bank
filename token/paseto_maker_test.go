@@ -22,7 +22,7 @@ func TestPasetoMaker(t *testing.T) {
 	payload, err := maker.VerifyToken(token)
 	require.NoError(t, err)
 	require.NotEmpty(t, payload)
-	require.WithinDuration(t, issueAt, payload.IssueAt, time.Second)
+	require.WithinDuration(t, issueAt, payload.IssuedAt, time.Second)
 	require.WithinDuration(t, expriedAt, payload.ExpiredAt, time.Second)
 	require.Equal(t, username, payload.Username)
 }
