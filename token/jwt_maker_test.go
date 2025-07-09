@@ -1,8 +1,6 @@
 package token
 
 import (
-	"encoding/base64"
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
 	"github.com/stretchr/testify/require"
@@ -15,7 +13,7 @@ func TestJWTMaker(t *testing.T) {
 	require.NoError(t, err)
 
 	username := utils.RandomOwner()
-	duration := time.Minute * 10
+	duration := time.Hour * 1
 	expriedAt := time.Now().Add(duration)
 	issueAt := time.Now()
 
@@ -23,13 +21,7 @@ func TestJWTMaker(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 	payload, err := maker.VerifyToken(token)
-	fmt.Printf("tai sao loi: %v\n", err)
 
-	encoded := base64.StdEncoding.EncodeToString([]byte(token))
-	fmt.Printf("token base64: %s\n", encoded)
-	//fmt.Printf("token: %v\n", token)
-	//fmt.Printf("payload: %s\n", payload)
-	//fmt.Printf("username: %s\n", username)
 	require.NoError(t, err)
 	require.NotEmpty(t, payload)
 	require.WithinDuration(t, issueAt, payload.IssueAt, time.Second)
@@ -64,7 +56,7 @@ func TestInvalidTokenAlgNone(t *testing.T) {
 
 	payload, err = maker.VerifyToken(token)
 	require.Error(t, err)
-	require.EqualError(t, err, jwt.ErrInvalidKey.Error())
+	require.EqualError(t, err, errInvalidToken.Error())
 	require.Nil(t, payload)
 
 }

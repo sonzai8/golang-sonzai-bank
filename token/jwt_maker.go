@@ -1,7 +1,6 @@
 package token
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
@@ -30,30 +29,20 @@ func (maker JWTMaker) CreateToken(username string, duration time.Duration) (stri
 func (maker JWTMaker) VerifyToken(token string) (*Payload, error) {
 
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
-		fmt.Println("token.Method: ", token.Method)
-		dume, ok := token.Method.(*jwt.SigningMethodHMAC)
-		fmt.Println("dume.SigningMethodHMAC:", dume)
+		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
-			fmt.Printf("err in function: : %+v\n", ok)
 			return nil, errInvalidToken
 		}
 		return []byte(maker.secretKey), nil
 	}
 	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)
-	encoded := base64.StdEncoding.EncodeToString([]byte(token))
-	fmt.Printf("token base64 in validate : %s\n", encoded)
-	fmt.Printf("token base64 in validate : %+v\n", err)
-
 	if err != nil {
-		fmt.Println("payload line 46 :", err)
-		fmt.Printf("payload line 49 :%+v \n", err)
+
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, ErrExpiredToken
 		}
-		if errors.Is(err, jwt.ErrInvalidKey) {
-			return nil, jwt.ErrInvalidKey
-		}
-		return nil, err
+
+		return nil, errInvalidToken
 	}
 
 	payload, ok := jwtToken.Claims.(*Payload)
