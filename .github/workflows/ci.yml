@@ -57,6 +57,5 @@ jobs:
       - name: Run migrate
         run: make migrate-up
 
-
       - name: Make Test
         run: make test
