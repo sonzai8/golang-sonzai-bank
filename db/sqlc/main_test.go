@@ -16,7 +16,7 @@ var testDB *pgxpool.Pool
 
 func TestMain(m *testing.M) {
 
-	config, err := utils.LoadConfig("../..")
+	config, err := utils.LoadConfig("../../.github/workflows/")
 	if err != nil {
 		log.Fatal(err)
 	}
