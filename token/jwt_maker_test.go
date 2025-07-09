@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
 	"github.com/stretchr/testify/require"
@@ -8,25 +9,29 @@ import (
 	"time"
 )
 
-//func TestJWTMaker(t *testing.T) {
-//	maker, err := NewJWTMaker(utils.RandomString(32))
-//	require.NoError(t, err)
-//
-//	username := utils.RandomOwner()
-//	duration := time.Minute * 10
-//	expriedAt := time.Now().Add(duration)
-//	issueAt := time.Now()
-//
-//	token, err := maker.CreateToken(username, duration)
-//	require.NoError(t, err)
-//	require.NotEmpty(t, token)
-//	payload, err := maker.VerifyToken(token)
-//	require.NoError(t, err)
-//	require.NotEmpty(t, payload)
-//	require.WithinDuration(t, issueAt, payload.IssueAt, time.Second)
-//	require.WithinDuration(t, expriedAt, payload.ExpiredAt, time.Second)
-//	require.Equal(t, username, payload.Username)
-//}
+func TestJWTMaker(t *testing.T) {
+	maker, err := NewJWTMaker(utils.RandomString(32))
+	require.NoError(t, err)
+
+	username := utils.RandomOwner()
+	duration := time.Minute * 10
+	expriedAt := time.Now().Add(duration)
+	issueAt := time.Now()
+
+	token, err := maker.CreateToken(username, duration)
+	require.NoError(t, err)
+	require.NotEmpty(t, token)
+	payload, err := maker.VerifyToken(token)
+	fmt.Printf("tai sao loi: %v", err)
+	fmt.Printf("token: %s", token)
+	fmt.Printf("payload: %s", payload)
+	fmt.Printf("username: %s", username)
+	//require.NoError(t, err)
+	require.NotEmpty(t, payload)
+	require.WithinDuration(t, issueAt, payload.IssueAt, time.Second)
+	require.WithinDuration(t, expriedAt, payload.ExpiredAt, time.Second)
+	require.Equal(t, username, payload.Username)
+}
 
 func TestExpiredToken(t *testing.T) {
 	maker, err := NewJWTMaker(utils.RandomString(32))
