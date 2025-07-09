@@ -8,26 +8,26 @@ import (
 	"time"
 )
 
-func TestJWTMaker(t *testing.T) {
-	//maker, err := NewJWTMaker(utils.RandomString(32))
-	//require.NoError(t, err)
-	//
-	//username := utils.RandomOwner()
-	//duration := time.Minute * 10
-	//expriedAt := time.Now().Add(duration)
-	//issueAt := time.Now()
+//func TestJWTMaker(t *testing.T) {
+//maker, err := NewJWTMaker(utils.RandomString(32))
+//require.NoError(t, err)
+//
+//username := utils.RandomOwner()
+//duration := time.Minute * 10
+//expriedAt := time.Now().Add(duration)
+//issueAt := time.Now()
 
-	//token, err := maker.CreateToken(username, duration)
-	//require.NoError(t, err)
-	//require.NotEmpty(t, token)
-	//payload, err := maker.VerifyToken(token)
-	//fmt.Printf("err:%v\n", err)
-	//require.NoError(t, err)
-	//require.NotEmpty(t, payload)
-	//require.WithinDuration(t, issueAt, payload.IssueAt, time.Second)
-	//require.WithinDuration(t, expriedAt, payload.ExpiredAt, time.Second)
-	//require.Equal(t, username, payload.Username)
-}
+//token, err := maker.CreateToken(username, duration)
+//require.NoError(t, err)
+//require.NotEmpty(t, token)
+//payload, err := maker.VerifyToken(token)
+//fmt.Printf("err:%v\n", err)
+//require.NoError(t, err)
+//require.NotEmpty(t, payload)
+//require.WithinDuration(t, issueAt, payload.IssueAt, time.Second)
+//require.WithinDuration(t, expriedAt, payload.ExpiredAt, time.Second)
+//require.Equal(t, username, payload.Username)
+//}
 
 func TestExpiredToken(t *testing.T) {
 	maker, err := NewJWTMaker(utils.RandomString(32))
