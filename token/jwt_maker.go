@@ -1,7 +1,9 @@
 package token
 
 import (
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
@@ -30,12 +32,18 @@ func (maker JWTMaker) VerifyToken(token string) (*Payload, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
+			fmt.Printf("err in function: : %+v\n", ok)
 			return nil, jwt.ErrInvalidKey
 		}
 		return []byte(maker.secretKey), nil
 	}
 	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)
+	encoded := base64.StdEncoding.EncodeToString([]byte(token))
+	fmt.Printf("token base64 in validate : %s\n", encoded)
+	fmt.Printf("token base64 in validate : %+v\n", err)
+
 	if err != nil {
+		fmt.Println("payload line 46 :", err)
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, ErrExpiredToken
 		}
@@ -47,8 +55,11 @@ func (maker JWTMaker) VerifyToken(token string) (*Payload, error) {
 
 	payload, ok := jwtToken.Claims.(*Payload)
 	if !ok {
+		fmt.Println("payload line 57 :", ok)
 		return nil, errInvalidToken
 	}
+
+	fmt.Println("payload line60 :", payload)
 	err = payload.Valid()
 	return payload, nil
 }
