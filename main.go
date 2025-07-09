@@ -53,7 +53,11 @@ func main() {
 	pgPool, err = pgxpool.NewWithConfig(ctx, conf)
 
 	store := db.NewStore(pgPool)
-	server := api.NewServer(store)
+
+	server, err := api.NewServer(config, store)
+	if err != nil {
+		log.Fatal(err)
+	}
 	err = server.Start(config.AppConfig.Port)
 	if err != nil {
 		log.Fatal("cannot start server:", err)

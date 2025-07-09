@@ -1,35 +1,34 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
+	"github.com/sonzai8/golang-sonzai-bank/token"
+	"github.com/sonzai8/golang-sonzai-bank/utils"
 	"log"
 )
 
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	config     utils.Config
+	tokenMaker token.Maker
+	store      db.Store
+	router     *gin.Engine
 }
 
-func NewServer(store db.Store) *Server {
-	router := gin.Default()
+func NewServer(config utils.Config, store db.Store) (*Server, error) {
 
-	server := &Server{
-		store:  store,
-		router: router,
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot create token maker %w", err)
 	}
-
-	router.POST("/users", server.CreateUser)
-
-	router.GET("/accounts", server.ListAccount)
-	router.GET("/accounts/:id", server.GetAccount)
-	router.POST("/accounts", server.CreateAccount)
-	router.POST("/accounts:id", server.UpdateAccount)
-	router.DELETE("/accounts/:id", server.DeleteAccount)
-
-	router.POST("/transfer", server.Transfer)
+	server := &Server{
+		config:     config,
+		store:      store,
+		tokenMaker: tokenMaker,
+	}
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		err := v.RegisterValidation("currency", validCurrency)
@@ -37,7 +36,24 @@ func NewServer(store db.Store) *Server {
 			log.Fatalf("register validation error: %v", err)
 		}
 	}
-	return server
+	server.SetupRouter()
+	return server, nil
+}
+
+func (server *Server) SetupRouter() {
+	router := gin.Default()
+	router.POST("/users", server.CreateUser)
+	router.POST("users/login", server.LoginUser)
+
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
+	authRoutes.GET("/accounts", server.ListAccount)
+	authRoutes.GET("/accounts/:id", server.GetAccount)
+	authRoutes.POST("/accounts", server.CreateAccount)
+	authRoutes.POST("/accounts:id", server.UpdateAccount)
+	authRoutes.DELETE("/accounts/:id", server.DeleteAccount)
+
+	authRoutes.POST("/transfers", server.Transfer)
+	server.router = router
 }
 
 func (server *Server) Start(address string) error {

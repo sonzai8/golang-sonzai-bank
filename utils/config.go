@@ -1,12 +1,17 @@
 package utils
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+	"time"
+)
 
 // Config store all configuration of the application.
 // the values a ready by viper
 type Config struct {
-	DbDriver  DatabaseConfig `mapstructure:"DB_DRIVER"`
-	AppConfig AppConfig      `mapstructure:"APP_CONFIG"`
+	DbDriver            DatabaseConfig `mapstructure:"DB_DRIVER"`
+	AppConfig           AppConfig      `mapstructure:"APP_CONFIG"`
+	TokenSymmetricKey   string         `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	AccessTokenDuration time.Duration  `mapstructure:"ACCESS_TOKEN_DURATION"`
 }
 
 type DatabaseConfig struct {

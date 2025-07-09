@@ -6,22 +6,26 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
+	"github.com/sonzai8/golang-sonzai-bank/token"
 	"net/http"
 )
 
 type createAccountRequest struct {
-	Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,currency"`
 }
 
 func (server *Server) CreateAccount(ctx *gin.Context) {
+
 	var input createAccountRequest
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
 	arg := db.CreateAccountParams{
-		Owner:    input.Owner,
+		Owner:    authPayload.Username,
 		Balance:  0,
 		Currency: input.Currency,
 	}
@@ -42,7 +46,7 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 		return
 
 	}
-	ctx.JSON(http.StatusOK, gin.H{"account": account})
+	ctx.JSON(http.StatusOK, account)
 }
 
 func (server *Server) UpdateAccount(ctx *gin.Context) {}
@@ -76,8 +80,9 @@ func (server *Server) ListAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	arg := db.ListAccountsParams{
+		Owner:  authPayload.Username,
 		Limit:  paging.PageSize,
 		Offset: (paging.PageId - 1) * paging.PageSize,
 	}
@@ -99,6 +104,7 @@ func (server *Server) GetAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
 	account, err := server.store.GetAccount(ctx, params.Id)
 	if err != nil {
@@ -108,6 +114,10 @@ func (server *Server) GetAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	//account = db.Account{}
+	if account.Owner != authPayload.Username {
+		err := errors.New("account dose not belong to the authenticated user")
+		ctx.JSON(http.StatusForbidden, errorResponse(err))
+		return
+	}
 	ctx.JSON(http.StatusOK, account)
 }
