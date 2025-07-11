@@ -2,7 +2,7 @@
 export
 MIGRATE_DIR = ./db/migrations
 
-CONN_STRING = postgres://$(DB_DRIVER.DB_USER):$(DB_DRIVER.DB_PASSWORD)@$(DB_DRIVER.DB_HOST):$(DB_PORT)/$(DB_DRIVER.DB_NAME)?sslmode=$(DB_DRIVER.DB_SSLMODE)
+CONN_STRING = postgres://$(DB_DRIVER.DB_USER):$(DB_DRIVER.DB_PASSWORD)@$(DB_DRIVER.DB_HOST):$(DB_DRIVER.DB_PORT)/$(DB_DRIVER.DB_NAME)?sslmode=$(DB_DRIVER.DB_SSLMODE)
 
 migrate-create:
 	migrate create -ext sql -dir $(MIGRATE_DIR) -seq $(name)
@@ -40,4 +40,10 @@ test:
 mock:
 	mockgen -package mockdb  -destination db/mock/store.go github.com/sonzai8/golang-sonzai-bank/db/sqlc Store
 
-.PHONY: migrate-create migrate-up migrate-down migrate-down-n migrate-goto migrate-force migrate-drop sqlc test migrateup mock
+proto:
+	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+        --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+        proto/*.proto
+evens:
+	evans --host localhost --port 9090 lo -r repl
+.PHONY: migrate-create migrate-up migrate-down migrate-down-n migrate-goto migrate-force migrate-drop sqlc test migrateup mock proto

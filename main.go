@@ -7,8 +7,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sonzai8/golang-sonzai-bank/api"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
+	"github.com/sonzai8/golang-sonzai-bank/gapi"
+	"github.com/sonzai8/golang-sonzai-bank/pb"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"log"
+	"net"
 	"time"
 )
 
@@ -53,14 +58,38 @@ func main() {
 	pgPool, err = pgxpool.NewWithConfig(ctx, conf)
 
 	store := db.NewStore(pgPool)
+	runGrpcServer(config, store)
 
+}
+
+func runGrpcServer(config utils.Config, store db.Store) {
+
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("can not create grpc server:", err)
+	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterSonZaiBankServer(grpcServer, server)
+	reflection.Register(grpcServer)
+	listener, err := net.Listen("tcp", config.AppConfig.GrpcPort)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+
+	}
+	log.Printf("grpc server listening at %v", listener.Addr())
+	err = grpcServer.Serve(listener)
+	if err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+func runGinServer(config utils.Config, store db.Store) {
 	server, err := api.NewServer(config, store)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = server.Start(config.AppConfig.Port)
+	err = server.Start(config.AppConfig.HttpPort)
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}
-
 }
