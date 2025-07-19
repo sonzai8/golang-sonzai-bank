@@ -37,12 +37,14 @@ func (server *Server) Login(ctx context.Context, req *pb.LoginUserRequest) (*pb.
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate access token")
 	}
+	metaData := server.extractMetadata(ctx)
+
 	newSession, err := server.store.CreateSession(ctx, db.CreateSessionParams{
 		ID:           refreshPayload.ID,
 		Username:     user.Username,
 		RefreshToken: refreshToken,
-		UserAgent:    "",
-		ClientIp:     "",
+		UserAgent:    metaData.UserAgent,
+		ClientIp:     metaData.ClientIP,
 		IsBlocked:    false,
 		ExpiresAt:    time.Now().Add(server.config.RefreshTokenDuration),
 	})
