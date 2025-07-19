@@ -117,7 +117,11 @@ func runGatewayServer(config utils.Config, store db.Store) {
 		log.Fatal("can not register grpc gateway server:", err)
 	}
 	mux := http.NewServeMux()
+
 	mux.Handle("/", grpcMux)
+	fs := http.FileServer(http.Dir("./doc/swagger"))
+	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
+
 	addr := fmt.Sprintf(":%s", config.AppConfig.HttpPort)
 	fmt.Printf("grpc gateway server listening at %v \n", addr)
 	listener, err := net.Listen("tcp", addr)
