@@ -44,6 +44,10 @@ proto:
 	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
         --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
         proto/*.proto
-evens:
-	evans --host localhost --port 9090 lo -r repl
-.PHONY: migrate-create migrate-up migrate-down migrate-down-n migrate-goto migrate-force migrate-drop sqlc test migrateup mock proto
+server:
+	go run main.go
+
+evans:
+	evans --host localhost --port 9090 -r repl
+.PHONY: migrate-create migrate-up migrate-down migrate-down-n migrate-goto\
+ 		migrate-force migrate-drop sqlc test migrateup mock proto server evans

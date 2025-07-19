@@ -13,7 +13,7 @@
   nếu transaction 2 thay đổi data ( balance -10 ) thì nó vẫn lấy được balance đúng và trừ đi 10 
 - serializable :
 
-- evans --host localhost --port 9090 lo -r repl
+- evans --host localhost --port 9090 -r repl
 - package pb
 - show service
 - service SonZaiBank 

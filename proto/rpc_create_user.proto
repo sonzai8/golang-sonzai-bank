@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package pb;
-
+import "user.proto";
 option go_package = "github.com/sonzai8/golang-sonzai-bank/pb";
 
 message CreateUserRequest {
@@ -12,8 +12,5 @@ message CreateUserRequest {
 }
 
 message CreateUserResponse{
-  string username = 1;
-  string full_name = 2;
-  string email = 3;
-  string password =4;
+  User user = 1;
 }
