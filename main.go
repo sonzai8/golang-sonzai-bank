@@ -13,6 +13,7 @@ import (
 	"github.com/sonzai8/golang-sonzai-bank/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 	"log"
 	"net"
 	"net/http"
@@ -95,11 +96,20 @@ func runGatewayServer(config utils.Config, store db.Store) {
 		log.Fatal("can not create grpc server:", err)
 	}
 
+	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames: true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+
 	//grpcServer := grpc.NewServer()
 	//pb.RegisterSonZaiBankServer(grpcServer, server)
 	//reflection.Register(grpcServer)
 
-	grpcMux := runtime.NewServeMux()
+	grpcMux := runtime.NewServeMux(jsonOption)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	err = pb.RegisterSonZaiBankHandlerServer(ctx, grpcMux, server)
