@@ -25,7 +25,7 @@ type DatabaseConfig struct {
 }
 
 type AppConfig struct {
-	HttpPort string `mapstructure:"APP_PORT"`
+	HttpPort string `mapstructure:"HTTP_APP_PORT"`
 	GrpcPort string `mapstructure:"GRPC_APP_PORT"`
 }
 

@@ -1,6 +1,6 @@
 syntax = "proto3";
 package pb;
-
+import "google/api/annotations.proto";
 import "rpc_login_user.proto";
 import "rpc_create_user.proto";
 option go_package = "github.com/sonzai8/golang-sonzai-bank/pb";
@@ -8,6 +8,16 @@ option go_package = "github.com/sonzai8/golang-sonzai-bank/pb";
 
 
 service SonZaiBank {
-  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse){}
-  rpc Login (LoginUserRequest) returns (LoginUserResponse){}
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse){
+    option (google.api.http) = {
+      post: "/v1/create_user"
+      body: "*"
+    };
+  }
+  rpc Login (LoginUserRequest) returns (LoginUserResponse){
+    option (google.api.http) = {
+      post: "/v1/login_user"
+      body: "*"
+    };
+  }
 }

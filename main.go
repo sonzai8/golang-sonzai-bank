@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sonzai8/golang-sonzai-bank/api"
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"net/http"
 	"time"
 )
 
@@ -58,6 +60,7 @@ func main() {
 	pgPool, err = pgxpool.NewWithConfig(ctx, conf)
 
 	store := db.NewStore(pgPool)
+	go runGatewayServer(config, store)
 	runGrpcServer(config, store)
 
 }
@@ -68,9 +71,11 @@ func runGrpcServer(config utils.Config, store db.Store) {
 	if err != nil {
 		log.Fatal("can not create grpc server:", err)
 	}
+
 	grpcServer := grpc.NewServer()
 	pb.RegisterSonZaiBankServer(grpcServer, server)
 	reflection.Register(grpcServer)
+
 	listener, err := net.Listen("tcp", config.AppConfig.GrpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -80,6 +85,43 @@ func runGrpcServer(config utils.Config, store db.Store) {
 	err = grpcServer.Serve(listener)
 	if err != nil {
 		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+func runGatewayServer(config utils.Config, store db.Store) {
+
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("can not create grpc server:", err)
+	}
+
+	//grpcServer := grpc.NewServer()
+	//pb.RegisterSonZaiBankServer(grpcServer, server)
+	//reflection.Register(grpcServer)
+
+	grpcMux := runtime.NewServeMux()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err = pb.RegisterSonZaiBankHandlerServer(ctx, grpcMux, server)
+	if err != nil {
+		log.Fatal("can not register grpc gateway server:", err)
+	}
+	mux := http.NewServeMux()
+	mux.Handle("/", grpcMux)
+	addr := fmt.Sprintf(":%s", config.AppConfig.HttpPort)
+	fmt.Printf("grpc gateway server listening at %v \n", addr)
+	listener, err := net.Listen("tcp", addr)
+
+	if err != nil {
+		log.Fatalf("failed to listen gateway: %v \n", err)
+
+	}
+
+	log.Printf("http gateway server listening at %v \n", listener.Addr())
+
+	err = http.Serve(listener, mux)
+	if err != nil {
+		log.Fatalf("failed to start http gateway serve: %v", err)
 	}
 }
 
