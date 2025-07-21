@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 	pg := config.DbDriver
 	dns := "postgresql://%s:%s@%s:%s/%s?sslmode=%s"
 	var s = fmt.Sprintf(dns, pg.User, pg.Pass, pg.Host, pg.Port, pg.Name, pg.SSLMode)
-
+	fmt.Println(s)
 	//conn, err := sql.Open(dbDriver, dbSource)
 	conf, err := pgxpool.ParseConfig(s)
 	if err != nil {

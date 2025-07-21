@@ -2,13 +2,26 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/lib/pq"
 	"github.com/sonzai8/golang-sonzai-bank/api"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
+	"github.com/sonzai8/golang-sonzai-bank/gapi"
+	"github.com/sonzai8/golang-sonzai-bank/pb"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 	"log"
+	"net"
+	"net/http"
 	"time"
 )
 
@@ -52,15 +65,108 @@ func main() {
 
 	pgPool, err = pgxpool.NewWithConfig(ctx, conf)
 
+	// run db migration
+	runDBMigration(config.AppConfig.MigrationURL, s)
 	store := db.NewStore(pgPool)
+	go runGatewayServer(config, store)
+	runGrpcServer(config, store)
 
+}
+
+func runDBMigration(migrateURL string, dbSource string) {
+	log.Println("Running migrations...", dbSource)
+	mgr, err := migrate.New(migrateURL, dbSource)
+	if err != nil {
+		//log.Fatal(migrateURL)
+		//log.Fatal(dbSource)
+		log.Fatal("cannot create new migrate instance", err, dbSource)
+	}
+	err = mgr.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		log.Fatal("failed to run migrate up: ", err)
+	}
+}
+
+func runGrpcServer(config utils.Config, store db.Store) {
+
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("can not create grpc server:", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterSonZaiBankServer(grpcServer, server)
+	reflection.Register(grpcServer)
+
+	listener, err := net.Listen("tcp", config.AppConfig.GrpcPort)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+
+	}
+	log.Printf("grpc server listening at %v", listener.Addr())
+	err = grpcServer.Serve(listener)
+	if err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+func runGatewayServer(config utils.Config, store db.Store) {
+
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("can not create grpc server:", err)
+	}
+
+	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames: true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+
+	//grpcServer := grpc.NewServer()
+	//pb.RegisterSonZaiBankServer(grpcServer, server)
+	//reflection.Register(grpcServer)
+
+	grpcMux := runtime.NewServeMux(jsonOption)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err = pb.RegisterSonZaiBankHandlerServer(ctx, grpcMux, server)
+	if err != nil {
+		log.Fatal("can not register grpc gateway server:", err)
+	}
+	mux := http.NewServeMux()
+
+	mux.Handle("/", grpcMux)
+	fs := http.FileServer(http.Dir("./doc/swagger"))
+	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
+
+	addr := fmt.Sprintf(":%s", config.AppConfig.HttpPort)
+	fmt.Printf("grpc gateway server listening at %v \n", addr)
+	listener, err := net.Listen("tcp", addr)
+
+	if err != nil {
+		log.Fatalf("failed to listen gateway: %v \n", err)
+
+	}
+
+	log.Printf("http gateway server listening at %v \n", listener.Addr())
+
+	err = http.Serve(listener, mux)
+	if err != nil {
+		log.Fatalf("failed to start http gateway serve: %v", err)
+	}
+}
+
+func runGinServer(config utils.Config, store db.Store) {
 	server, err := api.NewServer(config, store)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = server.Start(config.AppConfig.Port)
+	err = server.Start(config.AppConfig.HttpPort)
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}
-
 }

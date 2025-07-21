@@ -8,17 +8,14 @@ import (
 
 var letters = []rune("abcdefghiiklmnopqrrstuvvwxzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-// Âm đầu (không dấu)
 var initialConsonants = []string{
 	"b", "c", "d", "g", "h", "k", "l", "m", "n", "ph", "qu", "s", "t", "th", "tr", "v",
 }
 
-// Nguyên âm (không dấu)
 var vowels = []string{
 	"an", "ang", "inh", "ong", "i", "ai", "u", "o", "y", "ien", "uan", "anh",
 }
 
-// Âm cuối (không dấu)
 var finalConsonants = []string{
 	"", "n", "ng", "nh", "m", "t", "ch",
 }

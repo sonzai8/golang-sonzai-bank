@@ -11,4 +11,10 @@
   - khi transaction đã bắt đầu thì các dữ liệu select sẽ không đổi. kể cả khi có 1 transaction khác 
   đã thay đổi và commit dữ liệu mới. 
   nếu transaction 2 thay đổi data ( balance -10 ) thì nó vẫn lấy được balance đúng và trừ đi 10 
-- serializable : 
+- serializable :
+
+- evans --host localhost --port 9090 -r repl
+- package pb
+- show service
+- service SonZaiBank 
+- call CreateUser

@@ -2,7 +2,7 @@
 export
 MIGRATE_DIR = ./db/migrations
 
-CONN_STRING = postgres://$(DB_DRIVER.DB_USER):$(DB_DRIVER.DB_PASSWORD)@$(DB_DRIVER.DB_HOST):$(DB_PORT)/$(DB_DRIVER.DB_NAME)?sslmode=$(DB_DRIVER.DB_SSLMODE)
+CONN_STRING = postgres://$(DB_DRIVER.DB_USER):$(DB_DRIVER.DB_PASSWORD)@$(DB_DRIVER.DB_HOST):$(DB_DRIVER.DB_PORT)/$(DB_DRIVER.DB_NAME)?sslmode=$(DB_DRIVER.DB_SSLMODE)
 
 migrate-create:
 	migrate create -ext sql -dir $(MIGRATE_DIR) -seq $(name)
@@ -40,4 +40,18 @@ test:
 mock:
 	mockgen -package mockdb  -destination db/mock/store.go github.com/sonzai8/golang-sonzai-bank/db/sqlc Store
 
-.PHONY: migrate-create migrate-up migrate-down migrate-down-n migrate-goto migrate-force migrate-drop sqlc test migrateup mock
+proto:
+	rm -f pb/*.go
+	rm -f doc/swagger/*.swagger.json
+	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+        --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+         --grpc-gateway_out=pb --grpc-gateway_opt paths=source_relative\
+         --openapiv2_out=doc/swagger --openapiv2_opt=allow_merge=true,merge_file_name=sonzaibank\
+        proto/*.proto
+server:
+	go run main.go
+
+evans:
+	evans --host localhost --port 9090 -r repl
+.PHONY: migrate-create migrate-up migrate-down migrate-down-n migrate-goto\
+ 		migrate-force migrate-drop sqlc test migrateup mock proto server evans

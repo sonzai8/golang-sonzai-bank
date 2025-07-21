@@ -8,10 +8,11 @@ import (
 // Config store all configuration of the application.
 // the values a ready by viper
 type Config struct {
-	DbDriver            DatabaseConfig `mapstructure:"DB_DRIVER"`
-	AppConfig           AppConfig      `mapstructure:"APP_CONFIG"`
-	TokenSymmetricKey   string         `mapstructure:"TOKEN_SYMMETRIC_KEY"`
-	AccessTokenDuration time.Duration  `mapstructure:"ACCESS_TOKEN_DURATION"`
+	DbDriver             DatabaseConfig `mapstructure:"DB_DRIVER"`
+	AppConfig            AppConfig      `mapstructure:"APP_CONFIG"`
+	TokenSymmetricKey    string         `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	AccessTokenDuration  time.Duration  `mapstructure:"ACCESS_TOKEN_DURATION"`
+	RefreshTokenDuration time.Duration  `mapstructure:"REFRESH_TOKEN_DURATION"`
 }
 
 type DatabaseConfig struct {
@@ -24,7 +25,9 @@ type DatabaseConfig struct {
 }
 
 type AppConfig struct {
-	Port string `mapstructure:"APP_PORT"`
+	HttpPort     string `mapstructure:"HTTP_APP_PORT"`
+	GrpcPort     string `mapstructure:"GRPC_APP_PORT"`
+	MigrationURL string `mapstructure:"MIGRATION_URL"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
