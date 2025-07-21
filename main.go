@@ -2,10 +2,15 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/lib/pq"
 	"github.com/sonzai8/golang-sonzai-bank/api"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
 	"github.com/sonzai8/golang-sonzai-bank/gapi"
@@ -60,10 +65,26 @@ func main() {
 
 	pgPool, err = pgxpool.NewWithConfig(ctx, conf)
 
+	// run db migration
+	runDBMigration(config.AppConfig.MigrationURL, s)
 	store := db.NewStore(pgPool)
 	go runGatewayServer(config, store)
 	runGrpcServer(config, store)
 
+}
+
+func runDBMigration(migrateURL string, dbSource string) {
+	log.Println("Running migrations...", dbSource)
+	mgr, err := migrate.New(migrateURL, dbSource)
+	if err != nil {
+		//log.Fatal(migrateURL)
+		//log.Fatal(dbSource)
+		log.Fatal("cannot create new migrate instance", err, dbSource)
+	}
+	err = mgr.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		log.Fatal("failed to run migrate up: ", err)
+	}
 }
 
 func runGrpcServer(config utils.Config, store db.Store) {

@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  db:
+  postgres:
     image: postgres:17.5-alpine3.22
     container_name: sonzai-bank-db
     restart: unless-stopped
@@ -10,10 +10,11 @@ services:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: sonzai@123456
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-
+    networks:
+      - sonzai-bank-network
   api:
     build:
       context: .
@@ -21,6 +22,11 @@ services:
     ports:
       - 8085:8085
     depends_on:
-      - db
+      - postgres
+    networks:
+      - sonzai-bank-network
 volumes:
   pgdata:
+
+networks:
+  sonzai-bank-network:

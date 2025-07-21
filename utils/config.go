@@ -25,8 +25,9 @@ type DatabaseConfig struct {
 }
 
 type AppConfig struct {
-	HttpPort string `mapstructure:"HTTP_APP_PORT"`
-	GrpcPort string `mapstructure:"GRPC_APP_PORT"`
+	HttpPort     string `mapstructure:"HTTP_APP_PORT"`
+	GrpcPort     string `mapstructure:"GRPC_APP_PORT"`
+	MigrationURL string `mapstructure:"MIGRATION_URL"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
