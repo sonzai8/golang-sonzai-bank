@@ -16,7 +16,7 @@ jobs:
     env:
       DB_DRIVER.DB_USER: root
       DB_DRIVER.DB_PASSWORD: sonzai@123456
-      DB_DRIVER.DB_HOST: postgres
+      DB_DRIVER.DB_HOST: localhost
       DB_DRIVER.DB_PORT: 5432
       DB_DRIVER.DB_NAME: sonzai-bank
       DB_DRIVER.DB_SSLMODE: disable
@@ -35,6 +35,7 @@ jobs:
           --health-retries 5
         ports:
           - "5432:5432"
+
     steps:
       - name: Set up Go
         uses: actions/setup-go@v4
