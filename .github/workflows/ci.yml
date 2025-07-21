@@ -16,8 +16,8 @@ jobs:
     env:
       DB_USER: root
       DB_PASSWORD: sonzai@123456
-      DB_HOST: localhost
-      DB_PORT: 5433
+      DB_HOST: postgres
+      DB_PORT: 5432
       DB_NAME: sonzai-bank
       DB_SSLMODE: disable
 
@@ -34,7 +34,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - "5433:5432"
+          - "5432:5432"
     steps:
       - name: Set up Go
         uses: actions/setup-go@v4
