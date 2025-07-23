@@ -55,8 +55,8 @@ func main() {
 		log.Fatal().Msg(err.Error())
 	}
 	log.Info().Msg(fmt.Sprintf("environment: %s", config.AppConfig.Environment))
-	if config.AppConfig.Environment == "development" {
 
+	if config.AppConfig.Environment == "development" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
@@ -114,6 +114,7 @@ func runGrpcServer(config utils.Config, store db.Store) {
 
 	}
 	log.Printf("grpc server listening at %v", listener.Addr())
+
 	err = grpcServer.Serve(listener)
 	if err != nil {
 		log.Fatal().Msgf("failed to serve: %v", err)
@@ -163,8 +164,8 @@ func runGatewayServer(config utils.Config, store db.Store) {
 	}
 
 	log.Printf("http gateway server listening at %v \n", listener.Addr())
-
-	err = http.Serve(listener, mux)
+	handler := gapi.HttpLogger(mux)
+	err = http.Serve(listener, handler)
 	if err != nil {
 		log.Fatal().Msgf("failed to start http gateway serve: %v", err)
 	}
