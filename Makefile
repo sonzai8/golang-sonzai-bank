@@ -53,5 +53,10 @@ server:
 
 evans:
 	evans --host localhost --port 9090 -r repl
+
+redis:
+	docker run --name redis -p 6379:6379 -d redis:8.0.3-alpine
+
 .PHONY: migrate-create migrate-up migrate-down migrate-down-n migrate-goto\
- 		migrate-force migrate-drop sqlc test migrateup mock proto server evans
+ 		migrate-force migrate-drop sqlc test migrateup mock proto server evans\
+ 		redis

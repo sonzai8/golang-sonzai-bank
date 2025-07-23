@@ -14,7 +14,7 @@ var (
 func ValidatorString(value string, minLeght int, maxLenght int) error {
 	n := len(value)
 	if n < minLeght || n > maxLenght {
-		return fmt.Errorf("must contain form %d-%d characters", minLeght, maxLenght)
+		return fmt.Errorf("must contain form %d-%d characters: %s", minLeght, maxLenght, value)
 	}
 	return nil
 }

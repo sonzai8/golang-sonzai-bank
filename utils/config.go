@@ -9,6 +9,7 @@ import (
 // the values a ready by viper
 type Config struct {
 	DbDriver             DatabaseConfig `mapstructure:"DB_DRIVER"`
+	RedisConfig          RedisConfig    `mapstructure:"REDIS"`
 	AppConfig            AppConfig      `mapstructure:"APP_CONFIG"`
 	TokenSymmetricKey    string         `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	AccessTokenDuration  time.Duration  `mapstructure:"ACCESS_TOKEN_DURATION"`
@@ -29,6 +30,10 @@ type AppConfig struct {
 	HttpPort     string `mapstructure:"HTTP_APP_PORT"`
 	GrpcPort     string `mapstructure:"GRPC_APP_PORT"`
 	MigrationURL string `mapstructure:"MIGRATION_URL"`
+}
+
+type RedisConfig struct {
+	Address string `mapstructure:"ADDRESS"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

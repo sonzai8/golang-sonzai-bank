@@ -3,14 +3,17 @@ package gapi
 import (
 	"context"
 	"errors"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgconn"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
 	"github.com/sonzai8/golang-sonzai-bank/pb"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
 	"github.com/sonzai8/golang-sonzai-bank/val"
+	"github.com/sonzai8/golang-sonzai-bank/worker"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
@@ -42,7 +45,22 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		return nil, status.Errorf(codes.Internal, "Failed to create user: %v", err)
 
 	}
+	// TODO: user db transaction
 	// Send Verify email here
+	taskPayload := &worker.PayloadSendVerifyEmail{
+		Username: req.GetUsername(),
+	}
+
+	taskOpts := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.ProcessIn(10 * time.Second),
+		asynq.Queue(worker.QueueCritical),
+	}
+
+	err = server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, taskPayload, taskOpts...)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to distribute task send verify email: %v", err)
+	}
 	rspUSer := &pb.CreateUserResponse{
 		User: convertUser(account),
 	}
@@ -60,7 +78,7 @@ func validateCreateUserRequest(req *pb.CreateUserRequest) (violations []*errdeta
 	if err := val.ValidatePassword(req.GetPassword()); err != nil {
 		violations = append(violations, fieldViolation("password", err))
 	}
-	if err := val.ValidateFullname(req.GetPassword()); err != nil {
+	if err := val.ValidateFullname(req.GetFullName()); err != nil {
 		violations = append(violations, fieldViolation("full_name", err))
 	}
 	return violations
