@@ -159,7 +159,7 @@ func runGatewayServer(config utils.Config, store db.Store) {
 	listener, err := net.Listen("tcp", addr)
 
 	if err != nil {
-		log.Fatal().Msgf("failed to listen gateway: %v \n")
+		log.Fatal().Msg("failed to listen gateway: %v \n")
 
 	}
 
