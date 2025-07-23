@@ -5,10 +5,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog/log"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
 	"github.com/sonzai8/golang-sonzai-bank/token"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
-	"log"
 )
 
 type Server struct {
@@ -33,7 +33,7 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		err := v.RegisterValidation("currency", validCurrency)
 		if err != nil {
-			log.Fatalf("register validation error: %v", err)
+			log.Fatal().Msg("register validation error:")
 		}
 	}
 	server.SetupRouter()

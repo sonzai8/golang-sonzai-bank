@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog/log"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
-	"log"
+
 	"os"
 	"testing"
 	"time"
@@ -18,7 +19,7 @@ func TestMain(m *testing.M) {
 
 	config, err := utils.LoadConfig("../../.github/workflows/")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Msg(err.Error())
 	}
 	pg := config.DbDriver
 	dns := "postgresql://%s:%s@%s:%s/%s?sslmode=%s"
@@ -27,7 +28,7 @@ func TestMain(m *testing.M) {
 	//conn, err := sql.Open(dbDriver, dbSource)
 	conf, err := pgxpool.ParseConfig(s)
 	if err != nil {
-		log.Fatal("cannot connect to db:", err)
+		log.Fatal().Msg("cannot connect to db:")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

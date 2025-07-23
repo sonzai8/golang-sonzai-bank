@@ -11,6 +11,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/sonzai8/golang-sonzai-bank/api"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
 	"github.com/sonzai8/golang-sonzai-bank/gapi"
@@ -19,9 +21,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
-	"log"
 	"net"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -47,16 +49,23 @@ var testQueries *db.Queries
 var pgPool *pgxpool.Pool
 
 func main() {
+
 	config, err := utils.LoadConfig(".")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Msg(err.Error())
 	}
+	log.Info().Msg(fmt.Sprintf("environment: %s", config.AppConfig.Environment))
+	if config.AppConfig.Environment == "development" {
+
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
 	pg := config.DbDriver
 	dns := "postgresql://%s:%s@%s:%s/%s?sslmode=%s"
 	var s = fmt.Sprintf(dns, pg.User, pg.Pass, pg.Host, pg.Port, pg.Name, pg.SSLMode)
 	conf, err := pgxpool.ParseConfig(s)
 	if err != nil {
-		log.Fatal("cannot connect to db:", err)
+		log.Fatal().Msg("cannot connect to db:")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -74,16 +83,16 @@ func main() {
 }
 
 func runDBMigration(migrateURL string, dbSource string) {
-	log.Println("Running migrations...", dbSource)
+	log.Print("Running migrations...", dbSource)
 	mgr, err := migrate.New(migrateURL, dbSource)
 	if err != nil {
-		//log.Fatal(migrateURL)
-		//log.Fatal(dbSource)
-		log.Fatal("cannot create new migrate instance", err, dbSource)
+		//log.Fatal().Msg(migrateURL)
+		//log.Fatal().Msg(dbSource)
+		log.Fatal().Msg("cannot create new migrate instance")
 	}
 	err = mgr.Up()
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatal("failed to run migrate up: ", err)
+		log.Fatal().Msg("failed to run migrate up: ")
 	}
 }
 
@@ -91,22 +100,23 @@ func runGrpcServer(config utils.Config, store db.Store) {
 
 	server, err := gapi.NewServer(config, store)
 	if err != nil {
-		log.Fatal("can not create grpc server:", err)
+		log.Fatal().Msg("can not create grpc server:")
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcLogger := grpc.UnaryInterceptor(gapi.GrpcLogger)
+	grpcServer := grpc.NewServer(grpcLogger)
 	pb.RegisterSonZaiBankServer(grpcServer, server)
 	reflection.Register(grpcServer)
 
 	listener, err := net.Listen("tcp", config.AppConfig.GrpcPort)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatal().Msgf("failed to listen: %v", err)
 
 	}
 	log.Printf("grpc server listening at %v", listener.Addr())
 	err = grpcServer.Serve(listener)
 	if err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		log.Fatal().Msgf("failed to serve: %v", err)
 	}
 }
 
@@ -114,7 +124,7 @@ func runGatewayServer(config utils.Config, store db.Store) {
 
 	server, err := gapi.NewServer(config, store)
 	if err != nil {
-		log.Fatal("can not create grpc server:", err)
+		log.Fatal().Msg("can not create grpc server:")
 	}
 
 	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
@@ -135,7 +145,7 @@ func runGatewayServer(config utils.Config, store db.Store) {
 	defer cancel()
 	err = pb.RegisterSonZaiBankHandlerServer(ctx, grpcMux, server)
 	if err != nil {
-		log.Fatal("can not register grpc gateway server:", err)
+		log.Fatal().Msg("can not register grpc gateway server:")
 	}
 	mux := http.NewServeMux()
 
@@ -148,7 +158,7 @@ func runGatewayServer(config utils.Config, store db.Store) {
 	listener, err := net.Listen("tcp", addr)
 
 	if err != nil {
-		log.Fatalf("failed to listen gateway: %v \n", err)
+		log.Fatal().Msgf("failed to listen gateway: %v \n")
 
 	}
 
@@ -156,17 +166,17 @@ func runGatewayServer(config utils.Config, store db.Store) {
 
 	err = http.Serve(listener, mux)
 	if err != nil {
-		log.Fatalf("failed to start http gateway serve: %v", err)
+		log.Fatal().Msgf("failed to start http gateway serve: %v", err)
 	}
 }
 
 func runGinServer(config utils.Config, store db.Store) {
 	server, err := api.NewServer(config, store)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Msg(err.Error())
 	}
 	err = server.Start(config.AppConfig.HttpPort)
 	if err != nil {
-		log.Fatal("cannot start server:", err)
+		log.Fatal().Msg("cannot start server:")
 	}
 }
