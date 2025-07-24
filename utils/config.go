@@ -11,6 +11,7 @@ type Config struct {
 	DbDriver             DatabaseConfig `mapstructure:"DB_DRIVER"`
 	RedisConfig          RedisConfig    `mapstructure:"REDIS"`
 	AppConfig            AppConfig      `mapstructure:"APP_CONFIG"`
+	EmailConfig          EmailConfig    `mapstructure:"EMAIL_CONFIG"`
 	TokenSymmetricKey    string         `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	AccessTokenDuration  time.Duration  `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration  `mapstructure:"REFRESH_TOKEN_DURATION"`
@@ -34,6 +35,12 @@ type AppConfig struct {
 
 type RedisConfig struct {
 	Address string `mapstructure:"ADDRESS"`
+}
+
+type EmailConfig struct {
+	EmailSenderName     string `mapstructure:"EMAIL_SENDER_NAME"`
+	EmailSenderAddress  string `mapstructure:"EMAIL_SENDER_ADDRESS"`
+	EmailSenderPassword string `mapstructure:"EMAIL_SENDER_PASSWORD"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
