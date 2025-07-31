@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog/log"
+	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
+	"github.com/sonzai8/golang-sonzai-bank/utils"
 )
 
 const (
@@ -48,10 +51,28 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 
 	user, err := processor.store.GetUser(ctx, payload.Username)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("user not found %s", asynq.SkipRetry)
 		}
 		return fmt.Errorf("failed to get user %v", err)
+	}
+	arg := db.CreateVerifyEmailParams{
+		Username:   user.Username,
+		Email:      user.Email,
+		SecretCode: utils.RandomString(32),
+	}
+	verify, err := processor.store.CreateVerifyEmail(ctx, arg)
+
+	subject := fmt.Sprintf("welcome to sonzai bank")
+	verifyUrl := fmt.Sprintf("http://localhost:8085/verify/id=%d&secret_code=%s", verify.ID, verify.SecretCode)
+	fmt.Println(verifyUrl)
+	content := fmt.Sprintf(`Hello %s, <br/>
+				thank you for registering with us!<br/> 
+				Please <a href="%s">Click Here </a> for verify account`, user.FullName, verifyUrl)
+	to := []string{user.Email}
+	err = processor.mailer.SendEmail(subject, content, to, nil, nil, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create verify email %v", err)
 	}
 
 	log.Info().Str("type", task.Type()).

@@ -17,6 +17,7 @@ import (
 	"github.com/sonzai8/golang-sonzai-bank/api"
 	db "github.com/sonzai8/golang-sonzai-bank/db/sqlc"
 	"github.com/sonzai8/golang-sonzai-bank/gapi"
+	"github.com/sonzai8/golang-sonzai-bank/mail"
 	"github.com/sonzai8/golang-sonzai-bank/pb"
 	"github.com/sonzai8/golang-sonzai-bank/utils"
 	"github.com/sonzai8/golang-sonzai-bank/worker"
@@ -85,14 +86,15 @@ func main() {
 	}
 
 	taskDistributor := worker.NewRedisTaskDistributor(redisOps)
-	go runTaskProcessor(redisOps, store)
+	go runTaskProcessor(config, redisOps, store)
 	go runGatewayServer(config, store, taskDistributor)
 	runGrpcServer(config, store, taskDistributor)
 
 }
 
-func runTaskProcessor(redisOpts asynq.RedisClientOpt, store db.Store) {
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpts, store)
+func runTaskProcessor(config utils.Config, redisOpts asynq.RedisClientOpt, store db.Store) {
+	mailer := mail.NewGmailSender(config.EmailConfig.EmailSenderName, config.EmailConfig.EmailSenderAddress, config.EmailConfig.EmailSenderPassword)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpts, store, mailer)
 	log.Info().Msg(fmt.Sprintf("starting task processer"))
 	err := taskProcessor.Start()
 	if err != nil {
